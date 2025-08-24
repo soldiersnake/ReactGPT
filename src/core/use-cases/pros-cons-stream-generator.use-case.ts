@@ -1,5 +1,6 @@
 
-export const ProsConsStreamUseCase = async (prompt: string) => {
+export async function* ProsConsStreamGeneratorUseCase(prompt: string, abortSignal: AbortSignal) {
+
     try {
         const resp = await fetch(`${import.meta.env.VITE_GPT_API}/pros-cons-discusser-stream`, {
             method: 'POST',
@@ -7,7 +8,7 @@ export const ProsConsStreamUseCase = async (prompt: string) => {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({ prompt }),
-            // TODO: abortSIgnal
+            signal: abortSignal   // parametro para cancelar la consulta
         })
 
         if (!resp.ok) throw new Error('No se pudo realizar la comparacion')
@@ -18,21 +19,19 @@ export const ProsConsStreamUseCase = async (prompt: string) => {
             return null;
         }
 
-        return reader;
+        const decoder = new TextDecoder();
 
-        // const decoder = new TextDecoder();
+        let text = '';
+        while (true) {
+            const { value, done } = await reader.read();
+            if (done) {
+                break;
+            };
 
-        // let text = '';
-        // while (true) {
-        //     const { value, done } = await reader.read();
-        //     if (done) {
-        //         break;
-        //     };
-
-        //     const decodedChunk = decoder.decode(value, { stream: true });
-        //     text += decodedChunk;
-        //     console.log(text);
-        // }
+            const decodedChunk = decoder.decode(value, { stream: true });
+            text += decodedChunk;
+            yield text; // es el retorno de una funcion generadora
+        }
 
 
     } catch (error) {
