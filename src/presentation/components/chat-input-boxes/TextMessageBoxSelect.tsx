@@ -21,6 +21,7 @@ export const TextMessageBoxSelect = ({ onSendMessage, placeholder, disableCorrec
     const handleSendMessage = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault()
         if (message.trim().length === 0) return;
+        if (selectedOption === '') return;
         console.log('handleSendMessage');
         onSendMessage(message, selectedOption)
         setMessage('')
@@ -66,7 +67,10 @@ export const TextMessageBoxSelect = ({ onSendMessage, placeholder, disableCorrec
             </div>
 
             <div className="ml-4 ">
-                <button className="btn-primary">
+                <button
+                    className="btn-primary"
+                    disabled={selectedOption === ''}
+                >
                     <span className="mr-2">Enviar</span>
                     <i className="fa-regular fa-paper-plane"></i>
                 </button>
