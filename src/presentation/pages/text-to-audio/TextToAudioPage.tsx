@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { GptMessages, MyMessages, TextMessageBoxSelect, TypingLoader } from "../../components";
+import { GptMessages, GptMessagesAudio, MyMessages, TextMessageBoxSelect, TypingLoader } from "../../components";
+import { textToAudioUseCase } from "../../../core/use-cases";
 
 const displamer = `## Hola, escribe algun texto para generar Audio en base a el.
   * todo el audio generado es por AI.
@@ -18,10 +19,20 @@ const voices = [
   { id: "verse", text: "verse" },
 ];
 
-interface Message {
+interface TextMessage {
   text: string
   isGpt: boolean
+  type: 'text';
 }
+
+interface AudioMessage {
+  text: string;
+  isGpt: boolean;
+  audio: string;
+  type: 'audio';
+}
+
+type Message = TextMessage | AudioMessage
 
 
 export const TextToAudioPage = () => {
@@ -30,15 +41,19 @@ export const TextToAudioPage = () => {
   const [messages, setMessages] = useState<Message[]>([]);
 
   const handlePost = async (text: string, selectedVoice: string) => {
-    console.log(selectedVoice); // TODO : ELIMINAR ESTO
 
     setIsLoading(true);
-    setMessages((prev) => [...prev, { text: text, isGpt: false }]);
+    setMessages((prev) => [...prev, { text: text, isGpt: false, type: 'text' }]);
 
     // TODO: useCase
-
+    const { ok, message, audioUrl } = await textToAudioUseCase(text, selectedVoice)
     setIsLoading(false);
-    // Todo: añadir el emensaje de isGPE en TRUE
+
+    if (!ok) return 'No se pudo generar el audio';
+
+    setMessages((prev) =>
+      [...prev, { text: `${selectedVoice} - ${message}`, isGpt: true, type: 'audio', audio: audioUrl! }
+      ]);
 
   }
 
@@ -50,9 +65,17 @@ export const TextToAudioPage = () => {
 
           {
             messages.map((message, index) => (
-              message.isGpt
-                ? (
-                  <GptMessages key={index} text="Esto es de OpenAI" />
+              message.isGpt ?
+                (
+                  message.type === 'audio' ? (
+                    <GptMessagesAudio
+                      key={index}
+                      text={message.text}
+                      audio={message.audio}
+                    />
+                  ) : (
+                    <GptMessages key={index} text={message.text} />
+                  )
                 ) : (
                   <MyMessages key={index} text={message.text} />
                 )
