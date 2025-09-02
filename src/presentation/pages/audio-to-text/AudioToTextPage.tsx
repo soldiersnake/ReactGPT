@@ -21,8 +21,30 @@ export const AudioToTextPage = () => {
     const { data, ok } = await audioToTextUseCase(audioFile, text)
     setIsLoading(false);
     if (!ok) return;
-    // Todo: añadir el emensaje de isGPE en TRUE
-    console.log({ data });
+    const tokens = data?.usage.total_tokens ?? 0;
+    const textoGenerado = data?.text ?? '';
+
+    const gptMessage = `
+    ## Transcripcion:
+    __Total Tokens__ ${Math.round(tokens)}
+    ## El Texto es:
+    ${textoGenerado}
+    `
+    setMessages(prev => [
+      ...prev,
+      { text: gptMessage, isGpt: true },
+    ])
+
+    // si en la respuesta existen segmentos podria hacerse asi
+    // for (const segment of data?.segments) {
+    //   const segmentMessage = `
+    //   __De ${Math.round(segment.start)} a ${Math.round(segment.end)} segundos: __ ${segment.text}
+    //   `
+    //   setMessages(prev => [
+    //     ...prev,
+    //     { text: segmentMessage, isGpt: true },
+    //   ])
+    // }
 
   }
 
@@ -36,9 +58,9 @@ export const AudioToTextPage = () => {
             messages.map((message, index) => (
               message.isGpt
                 ? (
-                  <GptMessages key={index} text="Esto es de OpenAI" />
+                  <GptMessages key={index} text={message.text} />
                 ) : (
-                  <MyMessages key={index} text={message.text} />
+                  <MyMessages key={index} text={(message.text === '') ? 'Transcribe el audio' : message.text} />
                 )
 
             ))

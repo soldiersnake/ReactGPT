@@ -13,7 +13,7 @@ export const audioToTextUseCase = async (audioFile: File, prompt?: string) => {
             method: 'POST',
             body: formData,
         })
-        const data = resp.json() as AudioToTextResponse;
+        const data = await resp.json() as AudioToTextResponse;
 
         console.log({ data });
 
