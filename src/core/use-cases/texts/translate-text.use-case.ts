@@ -1,4 +1,4 @@
-import type { TranslateResponse } from "../../interfaces";
+import type { TranslateResponse } from "../../../interfaces";
 
 export const translateTextUseCase = async (prompt: string, lang: string) => {
     try {
